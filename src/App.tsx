@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, RefreshCw, X } from 'lucide-react';
+import { Search, RefreshCw, X, Copy, Check } from 'lucide-react';
 
 // Mock data for the dropdown lists
 const degreeLevel = ['Associate in Business', 'Associate in Engineering Technology', 'Associate of Science', 'Bachelor of Arts', 'Bachelor of Music', 'Bachelor of Science', 'Master of Business Administration', 'Master of Science'];
@@ -304,6 +304,8 @@ function App() {
   const [selectedOption, setSelectedOption] = useState('');
   const [selectedHonors, setSelectedHonors] = useState('');
   const [awardedDate, setAwardedDate] = useState('');
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [noDegreeSuccess, setNoDegreeSuccess] = useState(false);
   
   // No degree section states
   const [startTermDigit, setStartTermDigit] = useState('');
@@ -362,7 +364,33 @@ function App() {
     ? `No Degree Awarded, ${startTermCode} – ${endTermCode}`
     : startTermCode 
       ? `No Degree Awarded, ${startTermCode}${endTermCode ? ' – ' + endTermCode : ''}`
-      : '';
+      : 'No Degree Awarded';
+
+  // Handle copying the output text
+  const handleCopyText = () => {
+    if (outputText) {
+      navigator.clipboard.writeText(outputText)
+        .then(() => {
+          setCopySuccess(true);
+          setTimeout(() => setCopySuccess(false), 2000);
+        })
+        .catch(err => {
+          console.error('Failed to copy text: ', err);
+        });
+    }
+  };
+
+  // Handle copying the no degree text
+  const handleCopyNoDegreeText = () => {
+    navigator.clipboard.writeText(noDegreeText)
+      .then(() => {
+        setNoDegreeSuccess(true);
+        setTimeout(() => setNoDegreeSuccess(false), 2000);
+      })
+      .catch(err => {
+        console.error('Failed to copy no degree text: ', err);
+      });
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
@@ -421,9 +449,23 @@ function App() {
           
           {/* Right side - Output text and No Degree section */}
           <div className="w-full md:w-1/2 p-6">
-            <h2 className="text-xl font-semibold mb-4">Generated Output</h2>
-            <div className="w-full h-64 p-4 bg-gray-50 border border-gray-300 rounded-md whitespace-pre-line mb-8">
-              {outputText}
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Generated Output</h2>
+            </div>
+            <div className="relative w-full h-64 mb-8">
+              <div className="absolute top-2 right-2 z-10">
+                <button
+                  onClick={handleCopyText}
+                  disabled={!outputText}
+                  className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-200"
+                  title="Copy to clipboard"
+                >
+                  {copySuccess ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+                </button>
+              </div>
+              <div className="w-full h-full p-4 bg-gray-50 border border-gray-300 rounded-md whitespace-pre-line">
+                {outputText}
+              </div>
             </div>
             
             <h2 className="text-xl font-semibold mb-4">No Degree</h2>
@@ -464,9 +506,19 @@ function App() {
               </div>
             </div>
 
-            
-            <div className="w-full p-4 bg-gray-50 border border-gray-300 rounded-md mb-4">
-              {noDegreeText || "No Degree Awarded"}
+            <div className="relative w-full mb-4">
+              <div className="absolute top-2 right-2 z-10">
+                <button
+                  onClick={handleCopyNoDegreeText}
+                  className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-200"
+                  title="Copy to clipboard"
+                >
+                  {noDegreeSuccess ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+                </button>
+              </div>
+              <div className="w-full p-4 bg-gray-50 border border-gray-300 rounded-md">
+                {noDegreeText}
+              </div>
             </div>
             
             <button
