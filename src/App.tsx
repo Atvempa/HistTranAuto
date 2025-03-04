@@ -1,14 +1,62 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, RefreshCw, X, Copy, Check } from 'lucide-react';
 
-// Mock data for the dropdown lists
-const degreeLevel = ['Associate in Business', 'Associate in Engineering Technology', 'Associate of Science', 'Bachelor of Arts', 'Bachelor of Music', 'Bachelor of Science', 'Master of Business Administration', 'Master of Science'];
-
-const major = ['Applied Math', 'Art', 'Business Administration', 'Chemical Engineering', 'Chemistry', 'Civil Engineering', 'Civil Engineering Technology', 'Computer Engineering', 'Computer Science', 'Education', 'Electrical Engineering', 'Electrical Engineering Technology', 'Elementary Education', 'Engineering Technology', 'English', 'Industrial Management', 'Industrial Technology', 'Management', 'Mathematics', 'Mechanical Engineering', 'Music Performance', 'Nuclear Engineering', 'Nursing', 'Physical Therapy', 'Physics', 'Plastics', 'Plastics Engineering', 'Psychology', 'Systems Engineering', 'Textile Chemistry', 'Textile Engineering'];
-
-const option = ['Accounting', 'Banking', 'Computer', 'Computer Science', 'Data Processing', 'Elementary', 'Man Made Fibers', 'Management', 'Marketing'];
-
-const honors = ['Cum Laude', 'Magna Cum Laude', 'Summa Cum Laude', 'High Honors', 'Honors'];
+// Function to fetch data from Google Sheets
+const fetchGoogleSheetData = async (columnName: string, isKeyValuePair: boolean = false) => {
+  try {
+    const response = await fetch(
+      `https://docs.google.com/spreadsheets/d/1P7D-POSEWe88C6_hDXiiHFIyiN-XuHYTSY1KvQ5joCU/gviz/tq?tqx=out:json&headers=1&range=${columnName}`
+    );
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    //console.log('Raw response:', text); // Log the raw response for debugging
+    
+    // Extract JSON from the response text
+    const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\((.*)\);/s);
+    
+    if (!jsonMatch) {
+      throw new Error('Unable to extract JSON from response');
+    }
+    
+    const jsonText = jsonMatch[1];
+    const data = JSON.parse(jsonText);
+    
+    //console.log('Parsed data:', data); // Log the parsed data
+    
+    // Check if rows exist
+    if (!data.table || !data.table.rows) {
+      throw new Error('No rows found in the data');
+    }
+    
+    const rows = data.table.rows;
+    
+    // If it's a key-value pair (for degreeMap)
+    if (isKeyValuePair) {
+      return rows.reduce((acc: Record<string, string>, row: any) => {
+        // Safely access row values, accounting for potential null/undefined
+        const key = row.c[0]?.v;
+        const value = row.c[1]?.v;
+        
+        if (key && value) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {});
+    }
+    
+    // Extract values from the first column
+    return rows
+      .map((row: any) => row.c[0]?.v)
+      .filter((value: any) => value !== null && value !== undefined);
+  } catch (error) {
+    console.error('Detailed error fetching data:', error);
+    return isKeyValuePair ? {} : [];
+  }
+};
 
 // Custom dropdown component
 const Dropdown = ({ 
@@ -306,12 +354,47 @@ function App() {
   const [awardedDate, setAwardedDate] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
   const [noDegreeSuccess, setNoDegreeSuccess] = useState(false);
+
+  // Degree map state
+  const [degreeMap, setDegreeMap] = useState<Record<string, string>>({});
+
+  // Dropdown data states
+  const [degreeLevels, setDegreeLevels] = useState<string[]>([]);
+  const [majors, setMajors] = useState<string[]>([]);
+  const [options, setOptions] = useState<string[]>([]);
+  const [honorsList, setHonorsList] = useState<string[]>([]);
   
   // No degree section states
   const [startTermDigit, setStartTermDigit] = useState('');
   const [startYear, setStartYear] = useState('19');
   const [endTermDigit, setEndTermDigit] = useState('');
   const [endYear, setEndYear] = useState('19');
+
+  useEffect(() => {
+    const fetchDropdownData = async () => {
+      const [
+        fetchedDegreeLevels, 
+        fetchedDegreeMap,
+        fetchedMajors, 
+        fetchedOptions, 
+        fetchedHonors
+      ] = await Promise.all([
+        fetchGoogleSheetData('A1:A'),  // Start from row 2 to skip header
+        fetchGoogleSheetData('A:B',true),  // Start from row 2 to skip header
+        fetchGoogleSheetData('C1:C'),  // Start from row 2 to skip header
+        fetchGoogleSheetData('D1:D'),  // Start from row 2 to skip header
+        fetchGoogleSheetData('E1:E')
+      ]);
+
+      setDegreeLevels(fetchedDegreeLevels);
+      setDegreeMap(fetchedDegreeMap);
+      setMajors(fetchedMajors);
+      setOptions(fetchedOptions);
+      setHonorsList(fetchedHonors);
+    };
+
+    fetchDropdownData();
+  }, []);
 
   const resetForm = () => {
     setSelectedDegree('');
@@ -326,17 +409,6 @@ function App() {
     setStartYear('19');
     setEndTermDigit('');
     setEndYear('19');
-  };
-
-  const degreeMap: Record<string, string> = {
-    "Bachelor of Science": "BS",
-    "Bachelor of Arts": "BA",
-    "Master of Science": "MS",
-    "Master of Business Administration": "MBA",
-    "Associate of Science": "AS",
-    "Associate in Business": "AB",
-    "Associate in Engineering Technology": "AET",
-    "Bachelor of Music": "BM",
   };
 
   const degreeShort = degreeMap[selectedDegree] || "";
@@ -406,28 +478,28 @@ function App() {
             
             <Dropdown 
               label="Degree Level" 
-              options={degreeLevel} 
+              options={degreeLevels} 
               value={selectedDegree} 
               onChange={setSelectedDegree} 
             />
             
             <Dropdown 
               label="Major" 
-              options={major} 
+              options={majors} 
               value={selectedMajor} 
               onChange={setSelectedMajor} 
             />
             
             <Dropdown 
               label="Option/Concentration" 
-              options={option} 
+              options={options} 
               value={selectedOption} 
               onChange={setSelectedOption} 
             />
             
             <Dropdown 
               label="Honors" 
-              options={honors} 
+              options={honorsList} 
               value={selectedHonors} 
               onChange={setSelectedHonors} 
             />
