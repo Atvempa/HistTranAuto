@@ -1,352 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, RefreshCw, X, Copy, Check } from 'lucide-react';
-
-// Function to fetch data from Google Sheets
-const fetchGoogleSheetData = async (columnName: string, isKeyValuePair: boolean = false) => {
-  try {
-    const response = await fetch(
-      `https://docs.google.com/spreadsheets/d/1P7D-POSEWe88C6_hDXiiHFIyiN-XuHYTSY1KvQ5joCU/gviz/tq?tqx=out:json&headers=1&range=${columnName}`
-    );
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const text = await response.text();
-    //console.log('Raw response:', text); // Log the raw response for debugging
-    
-    // Extract JSON from the response text
-    const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\((.*)\);/s);
-    
-    if (!jsonMatch) {
-      throw new Error('Unable to extract JSON from response');
-    }
-    
-    const jsonText = jsonMatch[1];
-    const data = JSON.parse(jsonText);
-    
-    //console.log('Parsed data:', data); // Log the parsed data
-    
-    // Check if rows exist
-    if (!data.table || !data.table.rows) {
-      throw new Error('No rows found in the data');
-    }
-    
-    const rows = data.table.rows;
-    
-    // If it's a key-value pair (for degreeMap)
-    if (isKeyValuePair) {
-      return rows.reduce((acc: Record<string, string>, row: any) => {
-        // Safely access row values, accounting for potential null/undefined
-        const key = row.c[0]?.v;
-        const value = row.c[1]?.v;
-        
-        if (key && value) {
-          acc[key] = value;
-        }
-        return acc;
-      }, {});
-    }
-    
-    // Extract values from the first column
-    return rows
-      .map((row: any) => row.c[0]?.v)
-      .filter((value: any) => value !== null && value !== undefined);
-  } catch (error) {
-    console.error('Detailed error fetching data:', error);
-    return isKeyValuePair ? {} : [];
-  }
-};
-
-// Custom dropdown component
-const Dropdown = ({ 
-  label, 
-  options, 
-  value, 
-  onChange 
-}: { 
-  label: string; 
-  options: string[]; 
-  value: string; 
-  onChange: (value: string) => void;
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredOptions, setFilteredOptions] = useState(options);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [isEditing, setIsEditing] = useState(false);
-
-  // Update filtered options based on current search term
-  useEffect(() => {
-    const term = isEditing ? searchTerm : (value || searchTerm);
-    if (term) {
-      setFilteredOptions(
-        options.filter(option => 
-          option.toLowerCase().includes(term.toLowerCase())
-        )
-      );
-    } else {
-      setFilteredOptions(options);
-    }
-  }, [searchTerm, options, value, isEditing]);
-
-  // Handle clicks outside the dropdown
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setIsEditing(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const resetField = () => {
-    onChange('');
-    setSearchTerm('');
-    setIsEditing(false);
-  };
-
-  const handleInputFocus = () => {
-    setIsOpen(true);
-    if (value) {
-      setIsEditing(true);
-      setSearchTerm(value);
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setIsEditing(true);
-    if (!isOpen) {
-      setIsOpen(true);
-    }
-  };
-
-  const handleOptionSelect = (selectedOption: string) => {
-    onChange(selectedOption);
-    setSearchTerm('');
-    setIsOpen(false);
-    setIsEditing(false);
-  };
-
-  return (
-    <div className="mb-4 relative" ref={dropdownRef}>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-      </label>
-      <div className="relative flex">
-        <div className="relative flex-grow">
-          <input
-            type="text"
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={isEditing ? searchTerm : value}
-            onChange={handleInputChange}
-            onFocus={handleInputFocus}
-            placeholder={`Select ${label}`}
-          />
-          <Search className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
-        </div>
-        <button
-          onClick={resetField}
-          className="ml-2 px-2 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-          title="Reset field"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-      {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-          {filteredOptions.length > 0 ? (
-            filteredOptions.map((option, index) => (
-              <div
-                key={index}
-                className="p-2 hover:bg-gray-100 cursor-pointer"
-                onClick={() => handleOptionSelect(option)}
-              >
-                {option}
-              </div>
-            ))
-          ) : (
-            <div className="p-2 text-gray-500">No options found</div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Term input component (1-7)
-const TermInput = ({ 
-  value, 
-  onChange 
-}: { 
-  value: string; 
-  onChange: (value: string) => void;
-}) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let input = e.target.value;
-    
-    // Only allow digits
-    input = input.replace(/\D/g, '');
-    
-    // Limit to 1 digit
-    if (input.length > 1) {
-      input = input.slice(0, 1);
-    }
-    
-    // Ensure the digit is between 1-7
-    if (input && (parseInt(input) < 1 || parseInt(input) > 7)) {
-      input = '';
-    }
-    
-    onChange(input);
-  };
-
-  return (
-    <div>
-      <input
-        type="text"
-        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        value={value}
-        onChange={handleChange}
-        placeholder="1-7"
-      />
-    </div>
-  );
-};
-
-// Year input component
-const YearInput = ({ 
-  value, 
-  onChange 
-}: { 
-  value: string; 
-  onChange: (value: string) => void;
-}) => {
-  const [displayValue, setDisplayValue] = useState(value || '');
-  
-  useEffect(() => {
-    // Update display value when the actual value changes
-    setDisplayValue(value);
-  }, [value]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let input = e.target.value;
-    
-    // Only allow digits
-    input = input.replace(/\D/g, '');
-    
-    // Limit to 4 digits
-    if (input.length > 4) {
-      input = input.slice(0, 4);
-    }
-    
-    // Update the display value immediately for responsive UI
-    setDisplayValue(input);
-    
-    // Apply the "19" prefix logic only when sending to parent
-    let outputValue = input;
-
-    onChange(outputValue);
-  };
-
-  return (
-    <div>
-      <input
-        type="text"
-        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        value={displayValue}
-        onChange={handleChange}
-        placeholder="YYYY"
-      />
-    </div>
-  );
-};
-
-// Date input component
-const DateInput = ({ 
-  label, 
-  value, 
-  onChange 
-}: { 
-  label: string; 
-  value: string; 
-  onChange: (value: string) => void;
-}) => {
-  // Format date as mm/dd/yyyy
-  const formatDate = (input: string) => {
-    let value = input.replace(/\D/g, '');
-    if (value.length > 8) {
-      value = value.slice(0, 8);
-    }
-    
-    // Format as mm/dd/yyyy
-    if (value.length > 4) {
-      return `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4)}`;
-    } else if (value.length > 2) {
-      return `${value.slice(0, 2)}/${value.slice(2)}`;
-    }
-    return value;
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatDate(e.target.value);
-    onChange(formatted);
-  };
-
-  const resetField = () => {
-    onChange('');
-  };
-
-  return (
-    <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-      </label>
-      <div className="flex">
-        <input
-          type="text"
-          className="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={value}
-          onChange={handleChange}
-          placeholder="mm/dd/yyyy"
-        />
-        <button
-          onClick={resetField}
-          className="ml-2 px-2 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-          title="Reset field"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// Function to get term code based on input digit
-const getTermCode = (digit: string, year: string): string => {
-  if (!digit || !year) return '';
-  
-  const yearNum = parseInt(year);
-  const digitNum = parseInt(digit);
-  
-  if (digitNum === 1) {
-    return `FA${year}`;
-  } else if (digitNum === 2) {
-    return `SP${yearNum + 1}`;
-  } else if (digitNum === 3) {
-    return `WI${yearNum + 1}`;
-  } else {
-    return `SU${yearNum + 1}`;
-  }
-};
+import React, { useState } from 'react';
+import { RefreshCw, Copy, Check } from 'lucide-react';
+import { Dropdown, TermInput, YearInput, DateInput } from './input-components';
+import { useDropdownData } from './use-dropdown-data';
+import { getTermCode } from './utility-functions';
 
 function App() {
+  const { 
+    degreeLevels, 
+    degreeMap, 
+    majors, 
+    options, 
+    honorsList 
+  } = useDropdownData();
+
   const [selectedDegree, setSelectedDegree] = useState('');
   const [selectedMajor, setSelectedMajor] = useState('');
   const [selectedOption, setSelectedOption] = useState('');
@@ -355,46 +21,11 @@ function App() {
   const [copySuccess, setCopySuccess] = useState(false);
   const [noDegreeSuccess, setNoDegreeSuccess] = useState(false);
 
-  // Degree map state
-  const [degreeMap, setDegreeMap] = useState<Record<string, string>>({});
-
-  // Dropdown data states
-  const [degreeLevels, setDegreeLevels] = useState<string[]>([]);
-  const [majors, setMajors] = useState<string[]>([]);
-  const [options, setOptions] = useState<string[]>([]);
-  const [honorsList, setHonorsList] = useState<string[]>([]);
-  
   // No degree section states
   const [startTermDigit, setStartTermDigit] = useState('');
   const [startYear, setStartYear] = useState('19');
   const [endTermDigit, setEndTermDigit] = useState('');
   const [endYear, setEndYear] = useState('19');
-
-  useEffect(() => {
-    const fetchDropdownData = async () => {
-      const [
-        fetchedDegreeLevels, 
-        fetchedDegreeMap,
-        fetchedMajors, 
-        fetchedOptions, 
-        fetchedHonors
-      ] = await Promise.all([
-        fetchGoogleSheetData('A1:A'),  // Start from row 2 to skip header
-        fetchGoogleSheetData('A:B',true),  // Start from row 2 to skip header
-        fetchGoogleSheetData('C1:C'),  // Start from row 2 to skip header
-        fetchGoogleSheetData('D1:D'),  // Start from row 2 to skip header
-        fetchGoogleSheetData('E1:E')
-      ]);
-
-      setDegreeLevels(fetchedDegreeLevels);
-      setDegreeMap(fetchedDegreeMap);
-      setMajors(fetchedMajors);
-      setOptions(fetchedOptions);
-      setHonorsList(fetchedHonors);
-    };
-
-    fetchDropdownData();
-  }, []);
 
   const resetForm = () => {
     setSelectedDegree('');
@@ -416,7 +47,6 @@ function App() {
   const formattedLine = degreeShort && selectedMajor && awardedYear 
     ? `${degreeShort}, ${selectedMajor}, ${awardedYear};` 
     : "";
-
 
   // Generate output text
   const outputText = [
@@ -547,7 +177,6 @@ function App() {
             </div>
             <div className="grid grid-cols-3 gap-8 mb-4">
               <div className="grid grid-cols-2 gap-1">
-                {/* <label className="text-sm font-medium">Start:</label> */}
                 <div className="w-16">
                   <TermInput 
                     value={startTermDigit} 
@@ -562,7 +191,6 @@ function App() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-1">
-                {/* <label className="text-sm font-medium">End:</label> */}
                 <div className="w-16">
                   <TermInput 
                     value={endTermDigit} 
