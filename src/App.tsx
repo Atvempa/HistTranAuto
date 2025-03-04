@@ -419,7 +419,7 @@ function App() {
             />
             
             <Dropdown 
-              label="Option" 
+              label="Option/Concentration" 
               options={option} 
               value={selectedOption} 
               onChange={setSelectedOption} 
