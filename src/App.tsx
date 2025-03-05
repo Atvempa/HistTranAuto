@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { MainLayout } from './MainLayout';
 import { DegreeInformationInput, DegreeOutput } from './DegreeInformation';
@@ -47,16 +47,6 @@ function App() {
   return (
     <Router>
       <div>
-        <nav className="bg-gray-100 p-4">
-          <div className="container mx-auto flex justify-between items-center">
-            <Link to="/" className="text-xl font-bold">Degree Formatter</Link>
-            <div className="space-x-4">
-              <Link to="/" className="hover:text-blue-600">Home</Link>
-              <Link to="/about" className="hover:text-blue-600">About</Link>
-            </div>
-          </div>
-        </nav>
-
         <Routes>
           <Route 
             path="/" 

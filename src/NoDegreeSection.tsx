@@ -38,7 +38,7 @@ export const NoDegreeSection: React.FC = () => {
   };
 
   return (
-    <div className="w-full md:w-1/2 p-6">
+    <div className="w-full md: p-6">
       <h2 className="text-xl font-semibold mb-4">No Degree</h2>
       <div className="grid grid-cols-3 gap-8 mb-4">
         <label className="text-sm font-medium">Start Term & Year:</label>
