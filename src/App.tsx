@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { RefreshCw, Copy, Check } from 'lucide-react';
-import { Dropdown, TermInput, YearInput, DateInput } from './input-components';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { MainLayout } from './MainLayout';
+import { DegreeInformationInput, DegreeOutput } from './DegreeInformation';
+import { NoDegreeSection } from './NoDegreeSection';
 import { useDropdownData } from './use-dropdown-data';
-import { getTermCode } from './utility-functions';
+import About from './about';
 
 function App() {
   const { 
@@ -18,14 +20,6 @@ function App() {
   const [selectedOption, setSelectedOption] = useState('');
   const [selectedHonors, setSelectedHonors] = useState('');
   const [awardedDate, setAwardedDate] = useState('');
-  const [copySuccess, setCopySuccess] = useState(false);
-  const [noDegreeSuccess, setNoDegreeSuccess] = useState(false);
-
-  // No degree section states
-  const [startTermDigit, setStartTermDigit] = useState('');
-  const [startYear, setStartYear] = useState('19');
-  const [endTermDigit, setEndTermDigit] = useState('');
-  const [endYear, setEndYear] = useState('19');
 
   const resetForm = () => {
     setSelectedDegree('');
@@ -33,13 +27,6 @@ function App() {
     setSelectedOption('');
     setSelectedHonors('');
     setAwardedDate('');
-  };
-  
-  const resetNoDegreeForm = () => {
-    setStartTermDigit('');
-    setStartYear('19');
-    setEndTermDigit('');
-    setEndYear('19');
   };
 
   const degreeShort = degreeMap[selectedDegree] || "";
@@ -56,182 +43,49 @@ function App() {
     selectedHonors,
     awardedDate ? awardedDate : ''
   ].filter(Boolean).join('\n');
-  
-  // Generate term codes based on digit inputs and years
-  const startTermCode = getTermCode(startTermDigit, startYear);
-  const endTermCode = getTermCode(endTermDigit, endYear);
-  
-  // Generate no degree output text
-  const noDegreeText = startTermCode && endTermCode 
-    ? `No Degree Awarded, ${startTermCode} – ${endTermCode}`
-    : startTermCode 
-      ? `No Degree Awarded, ${startTermCode}${endTermCode ? ' – ' + endTermCode : ''}`
-      : 'No Degree Awarded';
-
-  // Handle copying the output text
-  const handleCopyText = () => {
-    if (outputText) {
-      navigator.clipboard.writeText(outputText)
-        .then(() => {
-          setCopySuccess(true);
-          setTimeout(() => setCopySuccess(false), 2000);
-        })
-        .catch(err => {
-          console.error('Failed to copy text: ', err);
-        });
-    }
-  };
-
-  // Handle copying the no degree text
-  const handleCopyNoDegreeText = () => {
-    navigator.clipboard.writeText(noDegreeText)
-      .then(() => {
-        setNoDegreeSuccess(true);
-        setTimeout(() => setNoDegreeSuccess(false), 2000);
-      })
-      .catch(err => {
-        console.error('Failed to copy no degree text: ', err);
-      });
-  };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="p-6 bg-blue-600 text-white">
-          <h1 className="text-2xl font-bold">Historic Transcript Automation</h1>
-        </div>
-        
-        <div className="flex flex-col md:flex-row">
-          {/* Left side - Input fields */}
-          <div className="w-full md:w-1/2 p-6 border-r border-gray-200">
-            <h2 className="text-xl font-semibold mb-4">Enter Degree Information</h2>
-            
-            <Dropdown 
-              label="Degree Level" 
-              options={degreeLevels} 
-              value={selectedDegree} 
-              onChange={setSelectedDegree} 
-            />
-            
-            <Dropdown 
-              label="Major" 
-              options={majors} 
-              value={selectedMajor} 
-              onChange={setSelectedMajor} 
-            />
-            
-            <Dropdown 
-              label="Option/Concentration" 
-              options={options} 
-              value={selectedOption} 
-              onChange={setSelectedOption} 
-            />
-            
-            <Dropdown 
-              label="Honors" 
-              options={honorsList} 
-              value={selectedHonors} 
-              onChange={setSelectedHonors} 
-            />
-            
-            <DateInput 
-              label="Awarded Date" 
-              value={awardedDate} 
-              onChange={setAwardedDate} 
-            />
-            
-            <button
-              onClick={resetForm}
-              className="mt-4 flex items-center px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Reset Form
-            </button>
-          </div>
-          
-          {/* Right side - Output text and No Degree section */}
-          <div className="w-full md:w-1/2 p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Generated Output</h2>
-            </div>
-            <div className="relative w-full h-64 mb-8">
-              <div className="absolute top-2 right-2 z-10">
-                <button
-                  onClick={handleCopyText}
-                  disabled={!outputText}
-                  className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-200"
-                  title="Copy to clipboard"
-                >
-                  {copySuccess ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
-                </button>
-              </div>
-              <div className="w-full h-full p-4 bg-gray-50 border border-gray-300 rounded-md whitespace-pre-line">
-                {outputText}
-              </div>
-            </div>
-            
-            <h2 className="text-xl font-semibold mb-4">No Degree</h2>
-            <div className="grid grid-cols-3 gap-8 mb-4">
-              <label className="text-sm font-medium">Start Term & Year:</label>
-              <label className="text-sm font-medium">End Term & Year:</label>
-            </div>
-            <div className="grid grid-cols-3 gap-8 mb-4">
-              <div className="grid grid-cols-2 gap-1">
-                <div className="w-16">
-                  <TermInput 
-                    value={startTermDigit} 
-                    onChange={setStartTermDigit}
-                  />
+    <Router>
+      <div>
+        <Routes>
+          <Route 
+            path="/" 
+            element={
+              <MainLayout>
+                <DegreeInformationInput 
+                  degreeLevels={degreeLevels}
+                  majors={majors}
+                  options={options}
+                  honorsList={honorsList}
+                  selectedDegree={selectedDegree}
+                  selectedMajor={selectedMajor}
+                  selectedOption={selectedOption}
+                  selectedHonors={selectedHonors}
+                  awardedDate={awardedDate}
+                  onDegreeChange={setSelectedDegree}
+                  onMajorChange={setSelectedMajor}
+                  onOptionChange={setSelectedOption}
+                  onHonorsChange={setSelectedHonors}
+                  onDateChange={setAwardedDate}
+                  onReset={resetForm}
+                />
+                
+                <div className="w-full md:w-1/2 p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">Generated Output</h2>
+                  </div>
+                  
+                  <DegreeOutput outputText={outputText} />
+                  
+                  <NoDegreeSection />
                 </div>
-                <div className="w-20">
-                  <YearInput 
-                    value={startYear} 
-                    onChange={setStartYear} 
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-1">
-                <div className="w-16">
-                  <TermInput 
-                    value={endTermDigit} 
-                    onChange={setEndTermDigit}
-                  />
-                </div>
-                <div className="w-20">
-                  <YearInput 
-                    value={endYear} 
-                    onChange={setEndYear} 
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="relative w-full mb-4">
-              <div className="absolute top-2 right-2 z-10">
-                <button
-                  onClick={handleCopyNoDegreeText}
-                  className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-200"
-                  title="Copy to clipboard"
-                >
-                  {noDegreeSuccess ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
-                </button>
-              </div>
-              <div className="w-full p-4 bg-gray-50 border border-gray-300 rounded-md">
-                {noDegreeText}
-              </div>
-            </div>
-            
-            <button
-              onClick={resetNoDegreeForm}
-              className="flex items-center px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Reset No Degree
-            </button>
-          </div>
-        </div>
+              </MainLayout>
+            } 
+          />
+          <Route path="/about" element={<About />} />
+        </Routes>
       </div>
-    </div>
+    </Router>
   );
 }
 
