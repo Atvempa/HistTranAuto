@@ -15,10 +15,10 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <h1 className="text-2xl font-bold">Historic Transcript Automation</h1>
           <div className="space-x-4 flex items-center">
             <Link to="/" className="hover:text-blue-200">Home</Link>
-            <Link to="/about" className="hover:text-blue-200">About</Link>
+            <Link to="/about" className="hover:text-blue-200">About App</Link>
             <button 
               onClick={() => window.open("https://docs.google.com/document/d/1xAvNtGIJcUwN9DQ-QaBJj9cqTof71xhvWAPDaJRySW4/edit?usp=sharing", "_blank")}
-              className="px-3 py-1 border border-white rounded-md text-white hover:bg-white hover:text-blue-600 transition" > Instruction for Historic Transcripts </button>
+              className="hover:text-blue-200" > Instruction for Historic Transcripts </button>
           </div>
         </div>
         
