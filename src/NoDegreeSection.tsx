@@ -5,20 +5,36 @@ import { getTermCode } from './utility-functions';
 
 export const NoDegreeSection: React.FC = () => {
   const [startTermDigit, setStartTermDigit] = useState('');
+  const [startTermType, setStartTermType] = useState<'digit' | 'month' | 'season'>('digit');
   const [startYear, setStartYear] = useState('19');
+  
   const [endTermDigit, setEndTermDigit] = useState('');
+  const [endTermType, setEndTermType] = useState<'digit' | 'month' | 'season'>('digit');
   const [endYear, setEndYear] = useState('19');
+  
   const [noDegreeSuccess, setNoDegreeSuccess] = useState(false);
 
   const resetNoDegreeForm = () => {
     setStartTermDigit('');
+    setStartTermType('digit');
     setStartYear('19');
     setEndTermDigit('');
+    setEndTermType('digit');
     setEndYear('19');
   };
 
-  const startTermCode = getTermCode(startTermDigit, startYear);
-  const endTermCode = getTermCode(endTermDigit, endYear);
+  const handleStartTermChange = (value: string, type: 'digit' | 'month' | 'season') => {
+    setStartTermDigit(value);
+    setStartTermType(type);
+  };
+
+  const handleEndTermChange = (value: string, type: 'digit' | 'month' | 'season') => {
+    setEndTermDigit(value);
+    setEndTermType(type);
+  };
+
+  const startTermCode = getTermCode(startTermDigit, startYear, startTermType);
+  const endTermCode = getTermCode(endTermDigit, endYear, endTermType);
   
   const noDegreeText = startTermCode && endTermCode 
     ? `No Degree Awarded, ${startTermCode} – ${endTermCode}`
@@ -38,35 +54,35 @@ export const NoDegreeSection: React.FC = () => {
   };
 
   return (
-    <div className="w-full md: p-6">
+    <div className="w-full md:p-6">
       <h2 className="text-xl font-semibold mb-4">No Degree</h2>
-      <div className="grid grid-cols-3 gap-8 mb-4">
-        <label className="text-sm font-medium">Start Term & Year:</label>
-        <label className="text-sm font-medium">End Term & Year:</label>
+      <div className="grid grid-cols-5 gap-8 mb-4">
+        <label className="col-span-2 text-sm font-medium">Start Term & Year:</label>
+        <label className="col-span-2 text-sm font-medium">End Term & Year:</label>
       </div>
-      <div className="grid grid-cols-3 gap-8 mb-4">
-        <div className="grid grid-cols-2 gap-1">
-          <div className="w-16">
+      <div className="grid grid-cols-5 gap-8 mb-4">
+        <div className="col-span-2 grid grid-cols-2 gap-1">
+          <div className="col-span-1.4 w-27">
             <TermInput 
               value={startTermDigit} 
-              onChange={setStartTermDigit}
+              onChange={handleStartTermChange}
             />
           </div>
-          <div className="w-20">
+          <div className="w-16">
             <YearInput 
               value={startYear} 
               onChange={setStartYear} 
             />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-1">
-          <div className="w-16">
+        <div className="col-span-2 grid grid-cols-2 gap-1">
+          <div className="col-span-1.4 w-27">
             <TermInput 
               value={endTermDigit} 
-              onChange={setEndTermDigit}
+              onChange={handleEndTermChange}
             />
           </div>
-          <div className="w-20">
+          <div className="w-16">
             <YearInput 
               value={endYear} 
               onChange={setEndYear} 

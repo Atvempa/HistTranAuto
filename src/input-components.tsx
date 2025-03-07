@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 
+type TermInputProps = {
+  value: string;
+  onChange: (value: string, inputType: 'digit' | 'month' | 'season') => void;
+};
+
 // Custom dropdown component
 export const Dropdown = ({ 
   label, 
@@ -123,42 +128,171 @@ export const Dropdown = ({
   );
 };
 
-// Term input component (1-7)
-export const TermInput = ({ 
-  value, 
-  onChange 
-}: { 
-  value: string; 
-  onChange: (value: string) => void;
-}) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let input = e.target.value;
+// Term input component
+export const TermInput: React.FC<TermInputProps> = ({ value, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Track which dropdown was used for display purposes
+  const [selectedType, setSelectedType] = useState<'digit' | 'month' | 'season' | null>(null);
+  const [displayValue, setDisplayValue] = useState('');
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Update display value when underlying value changes
+  useEffect(() => {
+    if (!value) {
+      setDisplayValue('');
+      setSelectedType(null);
+      return;
+    }
+
+    // Map digit to appropriate display value based on selected type
+    const digit = value;
     
-    // Only allow digits
-    input = input.replace(/\D/g, '');
+    if (selectedType === 'digit') {
+      setDisplayValue(digit);
+    } else if (selectedType === 'month') {
+      if (digit === '1') setDisplayValue('Aug-Dec');
+      else if (digit === '2') setDisplayValue('Jan-Apr');
+      else if (digit === '6') setDisplayValue('May-Jul');
+    } else if (selectedType === 'season') {
+      if (digit === '1') setDisplayValue('Fall');
+      else if (digit === '2') setDisplayValue('Spring');
+      else if (digit === '3') setDisplayValue('Winter'); 
+      else if (digit === '4') setDisplayValue('Summer');
+    }
+  }, [value, selectedType]);
+
+  // Handle digit selection
+  const handleDigitSelect = (digit: string) => {
+    setSelectedType('digit');
+    onChange(digit, 'digit');
+    setIsOpen(false);
+  };
+
+  // Handle month selection
+  const handleMonthSelect = (month: string) => {
+    setSelectedType('month');
     
-    // Limit to 1 digit
-    if (input.length > 1) {
-      input = input.slice(0, 1);
+    let digitValue = '';
+    if (month === 'Aug-Dec') {
+      digitValue = '1'; // Fall
+    } else if (month === 'Jan-Apr') {
+      digitValue = '2'; // Spring
+    } else if (month === 'May-Jul') {
+      digitValue = '6'; // Summer
     }
     
-    // Ensure the digit is between 1-7
-    if (input && (parseInt(input) < 1 || parseInt(input) > 7)) {
-      input = '';
+    onChange(digitValue, 'month');
+    setIsOpen(false);
+  };
+
+  // Handle season selection
+  const handleSeasonSelect = (season: string) => {
+    setSelectedType('season');
+    
+    // Convert season to equivalent digit for getTermCode
+    let digitValue = '';
+    switch (season) {
+      case 'Fall':
+        digitValue = '1';
+        break;
+      case 'Spring':
+        digitValue = '2';
+        break;
+      case 'Winter':
+        digitValue = '3';
+        break;
+      case 'Summer':
+        digitValue = '4';
+        break;
     }
     
-    onChange(input);
+    onChange(digitValue, 'season');
+    setIsOpen(false);
   };
 
   return (
-    <div>
-      <input
-        type="text"
-        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        value={value}
-        onChange={handleChange}
-        placeholder="1-7"
-      />
+    <div className="relative" ref={dropdownRef}>
+      {/* Input field that triggers the dropdowns */}
+      <div
+        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white flex items-center"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {displayValue || "Term"}
+      </div>
+
+      {/* Dropdown container */}
+      {isOpen && (
+        <div className="absolute mt-0 flex bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-40 overflow-hidden" style={{ width: "auto", minWidth: "100%" }}>
+          {/* Digit dropdown */}
+          <div className="w-14 border-r border-gray-200">
+            <div className="p-2 text-xs font-medium text-gray-500 bg-gray-50 border-b border-gray-200">
+              Digit
+            </div>
+            <div className="max-h-40 overflow-y-auto">
+              {[1, 2, 3, 6, 7, 0].map(digit => (
+                <div
+                  key={digit}
+                  className="p-2 hover:bg-blue-50 cursor-pointer"
+                  onClick={() => handleDigitSelect(digit.toString())}
+                >
+                  {digit}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Month dropdown */}
+          <div className="w-24 border-r border-gray-200">
+            <div className="p-2 text-xs font-medium text-gray-500 bg-gray-50 border-b border-gray-200">
+              Month
+            </div>
+            <div className="max-h-40 overflow-y-auto">
+              {['Jan-Apr', 'May-Jul', 'Aug-Dec', 'dummy'].map(month => (
+                <div
+                  key={month}
+                  className="p-2 hover:bg-blue-50 cursor-pointer"
+                  onClick={() => handleMonthSelect(month)}
+                >
+                  {month}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Season dropdown */}
+          <div className="w-20">
+            <div className="p-2 text-xs font-medium text-gray-500 bg-gray-50 border-b border-gray-200">
+              Season
+            </div>
+            <div className="max-h-40 overflow-y-auto">
+              {['Fall', 'Winter', 'Spring', 'Summer', 'dummy'].map(season => (
+                <div
+                  key={season}
+                  className="p-2 hover:bg-blue-50 cursor-pointer"
+                  onClick={() => handleSeasonSelect(season)}
+                >
+                  {season}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

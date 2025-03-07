@@ -55,19 +55,46 @@ export const fetchGoogleSheetData = async (columnName: string, isKeyValuePair: b
   };
   
   // Get term code based on input digit and year
-  export const getTermCode = (digit: string, year: string): string => {
+  export const getTermCode = (
+    digit: string, 
+    year: string, 
+    inputType: 'digit' | 'month' | 'season' = 'digit'
+  ): string => {
     if (!digit || !year) return '';
     
     const yearNum = parseInt(year);
     const digitNum = parseInt(digit);
     
-    if (digitNum === 1) {
-      return `FA${year}`;
-    } else if (digitNum === 2) {
-      return `SP${yearNum + 1}`;
-    } else if (digitNum === 3) {
-      return `WI${yearNum + 1}`;
+    // Only increment year for digit input type
+    if (inputType === 'digit') {
+      // Original behavior with year incrementing
+      if (digitNum === 1) {
+        // Fall
+        return `FA${year}`;
+      } else if (digitNum === 2) {
+        // Spring
+        return `SP${yearNum + 1}`;
+      } else if (digitNum === 3) {
+        // Winter
+        return `WI${yearNum + 1}`;
+      } else {
+        // Summer & other values
+        return `SU${yearNum + 1}`;
+      }
     } else {
-      return `SU${yearNum + 1}`;
+      // For month and season selections, don't increment the year
+      if (digitNum === 1) {
+        // Fall
+        return `FA${year}`;
+      } else if (digitNum === 2) {
+        // Spring
+        return `SP${year}`;
+      } else if (digitNum === 3) {
+        // Winter
+        return `WI${year}`;
+      } else {
+        // Summer & other values
+        return `SU${year}`;
+      }
     }
   };
