@@ -15,6 +15,7 @@ function App() {
     honorsList 
   } = useDropdownData();
 
+  const [oldOutput, setoldOutput] = useState('');
   const [selectedDegree, setSelectedDegree] = useState('');
   const [selectedMajor, setSelectedMajor] = useState('');
   const [selectedOption, setSelectedOption] = useState('');
@@ -22,6 +23,16 @@ function App() {
   const [awardedDate, setAwardedDate] = useState('');
 
   const resetForm = () => {
+    setoldOutput('');
+    setSelectedDegree('');
+    setSelectedMajor('');
+    setSelectedOption('');
+    setSelectedHonors('');
+    setAwardedDate('');
+  };
+
+  const addAnotherDegree = () => {
+    setoldOutput(outputText);
     setSelectedDegree('');
     setSelectedMajor('');
     setSelectedOption('');
@@ -37,6 +48,7 @@ function App() {
 
   // Generate output text
   const outputText = [
+    oldOutput,
     formattedLine,
     selectedDegree,
     [selectedMajor, selectedOption].filter(Boolean).join(', '),
@@ -68,6 +80,7 @@ function App() {
                   onHonorsChange={setSelectedHonors}
                   onDateChange={setAwardedDate}
                   onReset={resetForm}
+                  onAddAnotherDegree={addAnotherDegree}
                 />
                 
                 <div className="w-full md:w-1/2 p-6">

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { Dropdown, DateInput } from './input-components';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, Plus } from 'lucide-react';
 
 interface DegreeInformationInputProps {
   degreeLevels: string[];
@@ -19,6 +19,7 @@ interface DegreeInformationInputProps {
   onHonorsChange: (value: string) => void;
   onDateChange: (value: string) => void;
   onReset: () => void;
+  onAddAnotherDegree: () => void;
 }
 
 interface DegreeOutputProps {
@@ -40,7 +41,8 @@ export const DegreeInformationInput: React.FC<DegreeInformationInputProps> = ({
   onOptionChange,
   onHonorsChange,
   onDateChange,
-  onReset
+  onReset,
+  onAddAnotherDegree
 }) => {
   return (
     <div className="w-full md:w-1/2 p-6 border-r border-gray-200">
@@ -80,13 +82,23 @@ export const DegreeInformationInput: React.FC<DegreeInformationInputProps> = ({
         onChange={onDateChange} 
       />
       
-      <button
-        onClick={onReset}
-        className="mt-4 flex items-center px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-      >
-        <RefreshCw className="h-4 w-4 mr-2" />
-        Reset Form
-      </button>
+      <div className="mt-4 flex space-x-4">
+    <button
+      onClick={onReset}
+      className="flex items-center px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+    >
+      <RefreshCw className="h-4 w-4 mr-2" />
+      Reset Form
+    </button>
+
+    <button
+      onClick={onAddAnotherDegree}
+      className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+    >
+      <Plus className="h-4 w-4 mr-2" />
+      Add Another Degree
+    </button>
+  </div>
     </div>
   );
 };
