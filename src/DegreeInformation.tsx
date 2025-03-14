@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { Dropdown, DateInput } from './input-components';
 import { Copy, Check, Plus } from 'lucide-react';
@@ -105,6 +105,7 @@ export const DegreeInformationInput: React.FC<DegreeInformationInputProps> = ({
 
 export const DegreeOutput: React.FC<DegreeOutputProps> = ({ outputText }) => {
     const [copySuccess, setCopySuccess] = useState(false);
+    const outputRef = useRef<HTMLDivElement>(null);
   
     const handleCopyText = () => {
       if (outputText) {
@@ -118,6 +119,13 @@ export const DegreeOutput: React.FC<DegreeOutputProps> = ({ outputText }) => {
           });
       }
     };
+
+    useEffect(() => {
+      if (outputRef.current) {
+          outputRef.current.scrollTop = outputRef.current.scrollHeight;
+      }
+  }, [outputText]);
+
     return (
         <div className="relative w-full h-64 mb-8">
           <div className="absolute top-2 right-2 z-10">
@@ -130,7 +138,8 @@ export const DegreeOutput: React.FC<DegreeOutputProps> = ({ outputText }) => {
               {copySuccess ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
             </button>
           </div>
-          <div className="w-full h-full p-4 bg-gray-50 border border-gray-300 rounded-md whitespace-pre-line">
+          <div ref={outputRef} 
+            className="w-full h-full p-4 bg-gray-50 border border-gray-300 rounded-md whitespace-pre-line overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
             {outputText}
           </div>
         </div>
