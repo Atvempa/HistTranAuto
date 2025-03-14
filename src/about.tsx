@@ -22,7 +22,7 @@ function About() {
           <li>Choose a <strong>Major</strong> from the dropdown list.</li>
           <li>Optionally, specify an <strong>Option/Concentration</strong> related to the major.</li>
           <li>Select any applicable <strong>Honors</strong> (e.g., Summa Cum Laude).</li>
-          <li>Enter the <strong>Awarded Date</strong> in the format <code>mm/dd/yyyy</code>.</li>
+          <li>Enter the <strong>Awarded Date</strong> in the format <code>mm/dd/yyyy</code> or <code>mm/00/yyyy</code>.</li>
           <li>The system will generate an entry on the right side. Click the <strong>copy</strong> button to copy the text.</li>
         </ul>
 
