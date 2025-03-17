@@ -10,14 +10,12 @@ interface DegreeInformationInputProps {
   honorsList: string[];
   selectedDegree: string;
   selectedMajor: string;
-  selectedSecondMajor: string;
   selectedMinor: string;
   selectedOption: string;
   selectedHonors: string;
   awardedDate: string;
   onDegreeChange: (value: string) => void;
   onMajorChange: (value: string) => void;
-  onSecondMajorChange: (value: string) => void;
   onMinorChange: (value: string) => void;
   onOptionChange: (value: string) => void;
   onHonorsChange: (value: string) => void;
@@ -47,9 +45,7 @@ export const DegreeInformationInput: React.FC<DegreeInformationInputProps> = ({
   onDateChange,
   onReset,
   onAddAnotherDegree,
-  selectedSecondMajor,
   selectedMinor,
-  onSecondMajorChange,
   onMinorChange,
 }) => {
   return (
@@ -68,13 +64,6 @@ export const DegreeInformationInput: React.FC<DegreeInformationInputProps> = ({
         options={majors} 
         value={selectedMajor} 
         onChange={onMajorChange} 
-      />
-
-      <Dropdown 
-        label="Second Major" 
-        options={majors} 
-        value={selectedSecondMajor} 
-        onChange={onSecondMajorChange} 
       />
 
       <Dropdown 
