@@ -18,6 +18,7 @@ function App() {
   const [oldOutput, setoldOutput] = useState('');
   const [selectedDegree, setSelectedDegree] = useState('');
   const [selectedMajor, setSelectedMajor] = useState('');
+  const [selectedMinor, setSelectedMinor] = useState('');
   const [selectedOption, setSelectedOption] = useState('');
   const [selectedHonors, setSelectedHonors] = useState('');
   const [awardedDate, setAwardedDate] = useState('');
@@ -26,6 +27,7 @@ function App() {
     setoldOutput('');
     setSelectedDegree('');
     setSelectedMajor('');
+    setSelectedMinor('');
     setSelectedOption('');
     setSelectedHonors('');
     setAwardedDate('');
@@ -35,6 +37,7 @@ function App() {
     setoldOutput(outputText);
     setSelectedDegree('');
     setSelectedMajor('');
+    setSelectedMinor('');
     setSelectedOption('');
     setSelectedHonors('');
     setAwardedDate('');
@@ -42,19 +45,19 @@ function App() {
 
   const degreeShort = degreeMap[selectedDegree] || "";
   const awardedYear = awardedDate ? awardedDate.split("/").pop() : "";
-  const formattedLine = degreeShort && selectedMajor && awardedYear 
-    ? `${degreeShort}, ${selectedMajor}, ${awardedYear};` 
-    : "";
+  const formattedLine = degreeShort && selectedMajor && awardedYear ? `${degreeShort}, ${selectedMajor}, ${awardedYear};` : "";
+  const selectedOptionDisp = selectedOption ? `${selectedOption} Option` : "";
+  const selectedMinorDisp = selectedMinor ? `${selectedMinor} Minor` : "";
 
   // Generate output text
   const outputText = [
     oldOutput,
     formattedLine,
     selectedDegree,
-    [selectedMajor, selectedOption].filter(Boolean).join(', '),
+    [selectedMajor, selectedOptionDisp, selectedMinorDisp].filter(Boolean).join(', '),
     selectedHonors,
     awardedDate ? awardedDate : ''
-  ].filter(Boolean).join('\n');
+  ].filter(Boolean).join('\n') + '\n';
 
   return (
     <Router>
@@ -81,6 +84,8 @@ function App() {
                   onDateChange={setAwardedDate}
                   onReset={resetForm}
                   onAddAnotherDegree={addAnotherDegree}
+                  selectedMinor={selectedMinor}
+                  onMinorChange={setSelectedMinor}
                 />
                 
                 <div className="w-full md:w-1/2 p-6">
