@@ -18,6 +18,8 @@ function App() {
   const [oldOutput, setoldOutput] = useState('');
   const [selectedDegree, setSelectedDegree] = useState('');
   const [selectedMajor, setSelectedMajor] = useState('');
+  const [selectedSecondMajor, setSelectedSecondMajor] = useState('');
+  const [selectedMinor, setSelectedMinor] = useState('');
   const [selectedOption, setSelectedOption] = useState('');
   const [selectedHonors, setSelectedHonors] = useState('');
   const [awardedDate, setAwardedDate] = useState('');
@@ -26,6 +28,8 @@ function App() {
     setoldOutput('');
     setSelectedDegree('');
     setSelectedMajor('');
+    setSelectedSecondMajor('');
+    setSelectedMinor('');
     setSelectedOption('');
     setSelectedHonors('');
     setAwardedDate('');
@@ -35,6 +39,8 @@ function App() {
     setoldOutput(outputText);
     setSelectedDegree('');
     setSelectedMajor('');
+    setSelectedSecondMajor('');
+    setSelectedMinor('');
     setSelectedOption('');
     setSelectedHonors('');
     setAwardedDate('');
@@ -42,6 +48,7 @@ function App() {
 
   const degreeShort = degreeMap[selectedDegree] || "";
   const awardedYear = awardedDate ? awardedDate.split("/").pop() : "";
+  // THIS NEEDS TO BE UPDATED FOR SECOND MAJOR AND MINOR
   const formattedLine = degreeShort && selectedMajor && awardedYear 
     ? `${degreeShort}, ${selectedMajor}, ${awardedYear};` 
     : "";
@@ -81,6 +88,10 @@ function App() {
                   onDateChange={setAwardedDate}
                   onReset={resetForm}
                   onAddAnotherDegree={addAnotherDegree}
+                  selectedSecondMajor={selectedSecondMajor}
+                  selectedMinor={selectedMinor}
+                  onSecondMajorChange={setSelectedSecondMajor}
+                  onMinorChange={setSelectedMinor}
                 />
                 
                 <div className="w-full md:w-1/2 p-6">
